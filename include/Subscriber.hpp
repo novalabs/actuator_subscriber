@@ -41,7 +41,7 @@ public:
       Subscriber(
          const char*                       name,
          Core::MW::CoreActuator<DataType>& actuator,
-         Core::MW::Thread::Priority    priority = Core::MW::Thread::PriorityEnum::NORMAL
+         Core::MW::Thread::Priority        priority = Core::MW::Thread::PriorityEnum::NORMAL
       ) :
          CoreNode::CoreNode(name, priority),
          _actuator(actuator)
