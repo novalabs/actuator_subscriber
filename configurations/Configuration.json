@@ -1,5 +1,5 @@
 {
-  "name": "SubscriberConfiguration",
+  "name": "Configuration",
   "description": "Actuator subscriber node configuration",
   "namespace": "@",
   "fields": [

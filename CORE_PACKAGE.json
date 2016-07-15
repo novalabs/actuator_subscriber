@@ -1,6 +1,5 @@
 {
   "name": "actuator_subscriber",
-  "namespace": "@",
   "description": "A subscriber for CoreActuator actuators",
-  "sources": []
+  "provider": "core"
 }

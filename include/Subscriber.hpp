@@ -6,104 +6,119 @@
 
 #pragma once
 
-#include <Core/MW/Subscriber.hpp>
-#include <Core/MW/CoreNode.hpp>
-#include <Core/MW/CoreActuator.hpp>
+#include <core/mw/Subscriber.hpp>
+#include <core/mw/CoreNode.hpp>
+#include <core/mw/CoreActuator.hpp>
 
-#include <actuator_subscriber/SubscriberConfiguration.hpp>
-#include <actuator_msgs/Setpoint_f32.hpp>
+#include <core/actuator_subscriber/Configuration.hpp>
 
-#include <Configuration.hpp>
-#include <Module.hpp>
+#include <ModuleConfiguration.hpp>
 
+namespace core {
 namespace actuator_subscriber {
-   template <class _DATATYPE, class _MESSAGETYPE>
-   struct ValueOf {
-      static inline _DATATYPE
-      _(
-         const _MESSAGETYPE& from
-      )
-      {
-         return from.value;
-      }
-   };
-
-   template <typename _DATATYPE, class _MESSAGETYPE = _DATATYPE, class _CONVERTER = ValueOf<_DATATYPE, _MESSAGETYPE> >
-   class Subscriber:
-      public Core::MW::CoreNode
+template <class _DATATYPE, class _MESSAGETYPE>
+struct ValueOf {
+   static inline _DATATYPE
+   _(
+      const _MESSAGETYPE& from
+   )
    {
+      return from.value;
+   }
+};
+
+template <typename _DATATYPE, class _MESSAGETYPE = _DATATYPE, class _CONVERTER = ValueOf<_DATATYPE, _MESSAGETYPE> >
+class Subscriber:
+   public core::mw::CoreNode,
+   public core::mw::CoreConfigurable<core::actuator_subscriber::Configuration>
+{
 public:
-      using DataType    = _DATATYPE;
-      using MessageType = _MESSAGETYPE;
-      using Converter   = _CONVERTER;
+   using DataType    = _DATATYPE;
+   using MessageType = _MESSAGETYPE;
+   using Converter   = _CONVERTER;
 
 public:
-      Subscriber(
-         const char*                       name,
-         Core::MW::CoreActuator<DataType>& actuator,
-         Core::MW::Thread::Priority        priority = Core::MW::Thread::PriorityEnum::NORMAL
-      ) :
-         CoreNode::CoreNode(name, priority),
-         _actuator(actuator)
-      {
-         _workingAreaSize = 256;
-      }
+   Subscriber(
+      const char*                       name,
+      core::mw::CoreActuator<DataType>& actuator,
+      core::os::Thread::Priority        priority = core::os::Thread::PriorityEnum::NORMAL
+   ) :
+      CoreNode::CoreNode(name, priority),
+      CoreConfigurable<core::actuator_subscriber::Configuration>::CoreConfigurable(name),
+      _actuator(actuator)
+   {
+      _workingAreaSize = 256;
+   }
 
-      virtual
-      ~Subscriber()
-      {
-         teardown();
-      }
-
-public:
-      SubscriberConfiguration configuration;
+   virtual
+   ~Subscriber()
+   {
+      teardown();
+   }
 
 private:
-      Core::MW::Subscriber<MessageType, Configuration::SUBSCRIBER_QUEUE_LENGTH> _subscriber;
-      Core::MW::CoreActuator<DataType>& _actuator;
+   core::mw::Subscriber<MessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _subscriber;
+   core::mw::CoreActuator<DataType>& _actuator;
 
 private:
-      bool
-      onPrepareMW()
-      {
-         _subscriber.set_callback(Subscriber::callback);
-         this->subscribe(_subscriber, configuration.topic);
+   bool
+   onPrepareMW()
+   {
+      _subscriber.set_callback(Subscriber::callback);
+      this->subscribe(_subscriber, configuration().topic);
 
-         return true;
-      }
+      return true;
+   }
 
-      bool
-      onPrepareHW()
-      {
-         _actuator.start();
+   bool
+   onConfigure()
+   {
+      return isConfigured();
+   }
 
-         return true;
-      }
+   bool
+   onPrepareHW()
+   {
+      return _actuator.init();
+   }
 
-      bool
-      onLoop()
-      {
-         if (!this->spin(Configuration::SUBSCRIBER_SPIN_TIME)) {
-//				Core::MW::log(???)
+   bool
+   onStart()
+   {
+      return _actuator.start();
+   }
+
+   bool
+   onLoop()
+   {
+      if (!this->spin(ModuleConfiguration::SUBSCRIBER_SPIN_TIME)) {
+//				core::mw::log(???)
 //				_actuator.stop();
-            float x = 0.0;
-            _actuator.set(x);
-         }
-
-         return true;
+         float x = 0.0;       // TODO: isn't it better to use something like NaN???
+         _actuator.set(x);
       }
 
-      static bool
-      callback(
-         const actuator_msgs::Setpoint_f32& msg,
-         Core::MW::Node*                    node
-      )
-      {
-         Subscriber<_DATATYPE, _MESSAGETYPE, _CONVERTER>* _this = static_cast<Subscriber<_DATATYPE, _MESSAGETYPE, _CONVERTER>*>(node);
-         float x = Converter::_(msg);
-         _this->_actuator.set(x);
+      return true;
+   }
 
-         return true;
-      }
-   };
+   bool
+   onStop()
+   {
+      return _actuator.stop();
+   }
+
+   static bool
+   callback(
+      const core::actuator_msgs::Setpoint_f32& msg,
+      core::mw::Node*                          node
+   )
+   {
+      Subscriber<_DATATYPE, _MESSAGETYPE, _CONVERTER>* _this = static_cast<Subscriber<_DATATYPE, _MESSAGETYPE, _CONVERTER>*>(node);
+      float x = Converter::_(msg);
+      _this->_actuator.set(x);
+
+      return true;
+   }
+};
+}
 }
