@@ -1,0 +1,67 @@
+{
+  "name": "SpeedConfiguration",
+  "description": "Actuator speed subscriber node configuration",
+  "namespace": "@",
+  "fields": [
+    {
+      "name": "setpoint_topic",
+      "description": "Name of the setpoint topic to subscribe to",
+      "type": "CHAR",
+      "size": 16
+    },
+    {
+      "name": "encoder_topic",
+      "description": "Name of the encoder topic to subscribe to",
+      "type": "CHAR",
+      "size": 16
+    },
+    {
+      "name": "kp",
+      "description": "PID Gain",
+      "type": "FLOAT32",
+      "size": 1
+    },
+    {
+      "name": "ti",
+      "description": "Integral time",
+      "type": "FLOAT32",
+      "size": 1
+    },
+    {
+      "name": "td",
+      "description": "Derivative time",
+      "type": "FLOAT32",
+      "size": 1
+    },
+    {
+      "name": "ts",
+      "description": "Sampling time",
+      "type": "FLOAT32",
+      "size": 1
+    },
+    {
+      "name": "min",
+      "description": "Minimum output",
+      "type": "FLOAT32",
+      "size": 1
+    },
+    {
+      "name": "max",
+      "description": "Maximum output",
+      "type": "FLOAT32",
+      "size": 1
+    },
+    {
+      "name": "timeout",
+      "description": "Timeout for setpoint topic [ms]",
+      "type": "INT16",
+      "size": 1
+    },
+    {
+      "name": "idle",
+      "description": "Default output in case of setpoint timeout",
+      "type": "FLOAT32",
+      "size": 1
+    }
+  ]
+}
