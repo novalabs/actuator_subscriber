@@ -6,21 +6,23 @@
 
 #pragma once
 
-#include <Core/MW/Subscriber.hpp>
-#include <Core/MW/CoreNode.hpp>
-#include <Core/MW/CoreActuator.hpp>
+#include <core/mw/Subscriber.hpp>
+#include <core/mw/CoreNode.hpp>
+#include <core/mw/CoreActuator.hpp>
 
-#include <actuator_subscriber/SpeedConfiguration.hpp>
-#include <actuator_subscriber/PID.hpp>
-#include <actuator_msgs/Setpoint_f32.hpp>
+#include <core/actuator_subscriber/SpeedConfiguration.hpp>
+#include <core/actuator_subscriber/PID.hpp>
+#include <core/actuator_msgs/Setpoint_f32.hpp>
 
-#include <Configuration.hpp>
+#include <ModuleConfiguration.hpp>
 #include <Module.hpp>
 
+namespace core {
 namespace actuator_subscriber {
    template <typename _DATATYPE, class _MESSAGETYPE = _DATATYPE>
    class Speed:
-      public Core::MW::CoreNode
+      public core::mw::CoreNode,
+      public core::mw::CoreConfigurable<SpeedConfiguration>
    {
 public:
       using DataType    = _DATATYPE;
@@ -29,10 +31,11 @@ public:
 public:
       Speed(
          const char*                       name,
-         Core::MW::CoreActuator<DataType>& actuator,
-         Core::MW::Thread::Priority        priority = Core::MW::Thread::PriorityEnum::NORMAL
+         core::mw::CoreActuator<DataType>& actuator,
+         core::os::Thread::Priority        priority = core::os::Thread::PriorityEnum::NORMAL
       ) :
          CoreNode::CoreNode(name, priority),
+         CoreConfigurable<core::actuator_subscriber::SpeedConfiguration>::CoreConfigurable(name),
          _actuator(actuator)
       {
          _workingAreaSize = 256;
@@ -46,14 +49,14 @@ public:
       }
 
 public:
-      SpeedConfiguration configuration;
+      core::actuator_subscriber::SpeedConfiguration configuration;
 
 private:
-      Core::MW::Subscriber<MessageType, Configuration::SUBSCRIBER_QUEUE_LENGTH> _setpoint_subscriber;
-      Core::MW::Subscriber<sensor_msgs::Delta_f32, Configuration::SUBSCRIBER_QUEUE_LENGTH> _encoder_subscriber;
-      Core::MW::CoreActuator<DataType>& _actuator;
+      core::mw::Subscriber<MessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _setpoint_subscriber;
+      core::mw::Subscriber<core::sensor_msgs::Delta_f32, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _encoder_subscriber;
+      core::mw::CoreActuator<DataType>& _actuator;
       PID _pid;
-      Core::MW::Time _setpoint_timestamp;
+      core::os::Time _setpoint_timestamp;
 
 private:
       bool
@@ -87,12 +90,12 @@ private:
       bool
       onLoop()
       {
-         if (!this->spin(Configuration::SUBSCRIBER_SPIN_TIME)) {
+         if (!this->spin(ModuleConfiguration::SUBSCRIBER_SPIN_TIME)) {
             Module::led.toggle();
          }
 
-         if (Core::MW::Time::now() > (this->_setpoint_timestamp + Core::MW::Time::ms(configuration.timeout))) {
-//				Core::MW::log(???)
+         if (core::os::Time::now() > (this->_setpoint_timestamp + core::os::Time::ms(configuration.timeout))) {
+//				core::mw::log(???)
 //				_actuator.stop();
             _pid.set(configuration.idle);
          }
@@ -102,12 +105,12 @@ private:
 
       static bool
       setpoint_callback(
-         const actuator_msgs::Setpoint_f32& msg,
-         Core::MW::Node* node
+         const core::actuator_msgs::Setpoint_f32& msg,
+         core::mw::Node* node
       )
       {
          Speed<_DATATYPE, _MESSAGETYPE>* _this = static_cast<Speed<_DATATYPE, _MESSAGETYPE>*>(node);
-         _this->_setpoint_timestamp = Core::MW::Time::now();
+         _this->_setpoint_timestamp = core::os::Time::now();
          _this->_pid.set(msg.value);
 
          return true;
@@ -115,8 +118,8 @@ private:
 
       static bool
       encoder_callback(
-         const sensor_msgs::Delta_f32& msg,
-         Core::MW::Node* node
+         const core::sensor_msgs::Delta_f32& msg,
+         core::mw::Node* node
       )
       {
          Speed<_DATATYPE, _MESSAGETYPE>* _this = static_cast<Speed<_DATATYPE, _MESSAGETYPE>*>(node);
@@ -125,4 +128,5 @@ private:
          return true;
       }
    };
+}
 }
