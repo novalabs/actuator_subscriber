@@ -1,5 +1,5 @@
 {
   "name": "actuator_subscriber",
-  "description": "Subscriber nodes for CoreActuator actuators",
+  "description": "Subscriber nodes for core::utils::BasicActuator actuators",
   "provider": "core"
 }

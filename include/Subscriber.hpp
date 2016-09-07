@@ -8,7 +8,7 @@
 
 #include <core/mw/Subscriber.hpp>
 #include <core/mw/CoreNode.hpp>
-#include <core/mw/CoreActuator.hpp>
+#include <core/utils/BasicActuator.hpp>
 
 #include <core/actuator_subscriber/Configuration.hpp>
 
@@ -39,9 +39,9 @@ public:
 
 public:
    Subscriber(
-      const char*                       name,
-      core::mw::CoreActuator<DataType>& actuator,
-      core::os::Thread::Priority        priority = core::os::Thread::PriorityEnum::NORMAL
+      const char*                           name,
+      core::utils::BasicActuator<DataType>& actuator,
+      core::os::Thread::Priority            priority = core::os::Thread::PriorityEnum::NORMAL
    ) :
       CoreNode::CoreNode(name, priority),
       CoreConfigurable<core::actuator_subscriber::Configuration>::CoreConfigurable(name),
@@ -58,7 +58,7 @@ public:
 
 private:
    core::mw::Subscriber<MessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _subscriber;
-   core::mw::CoreActuator<DataType>& _actuator;
+   core::utils::BasicActuator<DataType>& _actuator;
 
 private:
    bool

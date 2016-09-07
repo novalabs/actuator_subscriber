@@ -1,2 +1,2 @@
 # actuator_subscriber
-A subscriber for CoreActuator actuators
+A subscriber for core::utils::BasicActuator actuators
