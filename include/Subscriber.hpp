@@ -110,10 +110,10 @@ private:
    static bool
    callback(
       const core::actuator_msgs::Setpoint_f32& msg,
-      core::mw::Node*                          node
+      void*                                    context
    )
    {
-      Subscriber<_DATATYPE, _MESSAGETYPE, _CONVERTER>* _this = static_cast<Subscriber<_DATATYPE, _MESSAGETYPE, _CONVERTER>*>(node);
+      Subscriber<_DATATYPE, _MESSAGETYPE, _CONVERTER>* _this = static_cast<Subscriber<_DATATYPE, _MESSAGETYPE, _CONVERTER>*>(context);
       float x = Converter::_(msg);
       _this->_actuator.set(x);
 

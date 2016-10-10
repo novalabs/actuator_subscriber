@@ -106,10 +106,10 @@ private:
    static bool
    setpoint_callback(
       const core::actuator_msgs::Setpoint_f32& msg,
-      core::mw::Node*                          node
+      void*                                    context
    )
    {
-      Speed<_DATATYPE, _MESSAGETYPE>* _this = static_cast<Speed<_DATATYPE, _MESSAGETYPE>*>(node);
+      Speed<_DATATYPE, _MESSAGETYPE>* _this = static_cast<Speed<_DATATYPE, _MESSAGETYPE>*>(context);
       _this->_setpoint_timestamp = core::os::Time::now();
       _this->_pid.set(msg.value);
 
@@ -119,10 +119,10 @@ private:
    static bool
    encoder_callback(
       const core::sensor_msgs::Delta_f32& msg,
-      core::mw::Node*                     node
+      void*                               context
    )
    {
-      Speed<_DATATYPE, _MESSAGETYPE>* _this = static_cast<Speed<_DATATYPE, _MESSAGETYPE>*>(node);
+      Speed<_DATATYPE, _MESSAGETYPE>* _this = static_cast<Speed<_DATATYPE, _MESSAGETYPE>*>(context);
       _this->_actuator.set(_this->_pid.update(msg.value));
 
       return true;
