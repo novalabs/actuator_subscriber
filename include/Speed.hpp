@@ -48,9 +48,6 @@ public:
       teardown();
    }
 
-public:
-   core::actuator_subscriber::SpeedConfiguration configuration;
-
 private:
    core::mw::Subscriber<MessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _setpoint_subscriber;
    core::mw::Subscriber<core::sensor_msgs::Delta_f32, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _encoder_subscriber;
@@ -62,7 +59,7 @@ private:
    bool
    onConfigure()
    {
-      _pid.config(configuration.kp, configuration.ti, configuration.td, configuration.ts, configuration.min, configuration.max);
+      _pid.config(configuration().kp, configuration().ti, configuration().td, configuration().ts, configuration().min, configuration().max);
 
       return true;
    }
@@ -71,10 +68,10 @@ private:
    onPrepareMW()
    {
       _setpoint_subscriber.set_callback(Speed::setpoint_callback);
-      this->subscribe(_setpoint_subscriber, configuration.setpoint_topic);
+      this->subscribe(_setpoint_subscriber, configuration().setpoint_topic);
 
       _encoder_subscriber.set_callback(Speed::encoder_callback);
-      this->subscribe(_encoder_subscriber, configuration.encoder_topic);
+      this->subscribe(_encoder_subscriber, configuration().encoder_topic);
 
       return true;
    }
@@ -94,10 +91,10 @@ private:
          Module::led.toggle();
       }
 
-      if (core::os::Time::now() > (this->_setpoint_timestamp + core::os::Time::ms(configuration.timeout))) {
+      if (core::os::Time::now() > (this->_setpoint_timestamp + core::os::Time::ms(configuration().timeout))) {
 //				core::mw::log(???)
 //				_actuator.stop();
-         _pid.set(configuration.idle);
+         _pid.set(configuration().idle);
       }
 
       return true;
