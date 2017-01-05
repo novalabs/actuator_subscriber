@@ -94,6 +94,7 @@ private:
       if (core::os::Time::now() > (this->_setpoint_timestamp + core::os::Time::ms(configuration().timeout))) {
 //				core::mw::log(???)
 //				_actuator.stop();
+         _pid.reset();
          _pid.set(configuration().idle);
       }
 
