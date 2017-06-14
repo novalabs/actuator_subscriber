@@ -109,8 +109,8 @@ private:
 
     static bool
     callback(
-        const core::actuator_msgs::Setpoint_f32& msg,
-        void*                                    context
+        const core::common_msgs::Float32& msg,
+        void*                             context
     )
     {
         Subscriber<_DATATYPE, _MESSAGETYPE, _CONVERTER>* _this = static_cast<Subscriber<_DATATYPE, _MESSAGETYPE, _CONVERTER>*>(context);
@@ -119,6 +119,18 @@ private:
 
         return true;
     }
+};
+
+template <class _ACTUATOR>
+class Subscriber_:
+    public Subscriber<typename _ACTUATOR::Converter::TO, typename _ACTUATOR::Converter::FROM, typename _ACTUATOR::Converter>
+{
+public:
+    Subscriber_(
+        const char*                                                    name,
+        core::utils::BasicActuator<typename _ACTUATOR::Converter::TO>& sensor,
+        core::os::Thread::Priority                                     priority = core::os::Thread::PriorityEnum::NORMAL
+    ) : Subscriber<typename _ACTUATOR::Converter::TO, typename _ACTUATOR::Converter::FROM, typename _ACTUATOR::Converter>(name, sensor, priority) {}
 };
 }
 }
