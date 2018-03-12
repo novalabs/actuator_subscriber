@@ -11,7 +11,7 @@
 #include <core/utils/BasicActuator.hpp>
 
 #include <core/actuator_subscriber/SpeedConfiguration.hpp>
-#include <core/actuator_subscriber/PID.hpp>
+#include <core/pid_ie/pid_ie.hpp>
 #include <core/actuator_msgs/Setpoint_f32.hpp>
 
 #include <ModuleConfiguration.hpp>
@@ -52,14 +52,14 @@ private:
     core::mw::Subscriber<MessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _setpoint_subscriber;
     core::mw::Subscriber<core::sensor_msgs::Delta_f32, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _encoder_subscriber;
     core::utils::BasicActuator<DataType>& _actuator;
-    PID _pid;
+   pid_ie::PID_IE _pid;
     core::os::Time _setpoint_timestamp;
 
 private:
     bool
     onConfigure()
     {
-        _pid.config(configuration().kp, configuration().ti, configuration().td, configuration().ts, configuration().min, configuration().max);
+      _pid.config(configuration().kp, configuration().ti, configuration().td, configuration().ts, 100, configuration().min, configuration().max);
 
         return true;
     }
@@ -94,6 +94,7 @@ private:
         if (core::os::Time::now() > (this->_setpoint_timestamp + core::os::Time::ms(configuration().timeout))) {
 //				core::mw::log(???)
 //				_actuator.stop();
+         _pid.reset();
             _pid.set(configuration().idle);
         }
 
