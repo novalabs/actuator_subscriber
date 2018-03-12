@@ -40,6 +40,12 @@
       "size": 1
     },
     {
+      "name": "n",
+      "description": "N",
+      "type": "FLOAT32",
+      "size": 1
+    },
+    {
       "name": "min",
       "description": "Minimum output",
       "type": "FLOAT32",

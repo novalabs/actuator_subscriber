@@ -73,7 +73,7 @@ private:
     bool
     onConfigure()
     {
-        _pid.config(configuration().kp, configuration().ti, configuration().td, configuration().ts, 100, configuration().min, configuration().max);
+        _pid.config(configuration().kp, configuration().ti, configuration().td, configuration().ts, configuration().n, configuration().min, configuration().max);
 
         return true;
     }
