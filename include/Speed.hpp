@@ -65,7 +65,7 @@ private:
     core::mw::Subscriber<MessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _setpoint_subscriber;
     core::mw::Subscriber<EncoderMessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _encoder_subscriber;
     core::utils::BasicActuator<DataType>& _actuator;
-    pid_ie::PID_IE _pid;
+    core::pid_ie::PID_IE _pid;
     core::os::Time _setpoint_timestamp;
 
 private:
