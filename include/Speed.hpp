@@ -19,7 +19,17 @@
 
 namespace core {
 namespace actuator_subscriber {
-template <typename _DATATYPE, class _MESSAGETYPE = _DATATYPE>
+template <class _DATATYPE, class _MESSAGETYPE>
+struct ValueOf {
+    static inline _DATATYPE
+    _(
+        const _MESSAGETYPE& from
+    )
+    {
+        return from.value;
+    }
+};
+template <typename _DATATYPE, class _MESSAGETYPE = _DATATYPE, class _ENCODER_MESSAGETYPE = _DATATYPE, class _CONVERTER = ValueOf<_DATATYPE, _MESSAGETYPE>, class _ENCODER_CONVERTER  = ValueOf<_DATATYPE, _ENCODER_MESSAGETYPE>>
 class Speed:
     public core::mw::CoreNode,
     public core::mw::CoreConfigurable<SpeedConfiguration>
@@ -27,6 +37,9 @@ class Speed:
 public:
     using DataType    = _DATATYPE;
     using MessageType = _MESSAGETYPE;
+    using Converter   = _CONVERTER;
+    using EncoderMessageType = _ENCODER_MESSAGETYPE;
+    using EncoderConverter   = _ENCODER_CONVERTER;
 
 public:
     Speed(
@@ -50,9 +63,9 @@ public:
 
 private:
     core::mw::Subscriber<MessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _setpoint_subscriber;
-    core::mw::Subscriber<core::sensor_msgs::Delta_f32, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _encoder_subscriber;
+    core::mw::Subscriber<EncoderMessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _encoder_subscriber;
     core::utils::BasicActuator<DataType>& _actuator;
-   pid_ie::PID_IE _pid;
+    pid_ie::PID_IE _pid;
     core::os::Time _setpoint_timestamp;
 
 private:
@@ -92,10 +105,8 @@ private:
         }
 
         if (core::os::Time::now() > (this->_setpoint_timestamp + core::os::Time::ms(configuration().timeout))) {
-//				core::mw::log(???)
-//				_actuator.stop();
-         _pid.reset();
-            _pid.set(configuration().idle);
+			_pid.reset();
+			_pid.set(configuration().idle);
         }
 
         return true;
@@ -103,28 +114,46 @@ private:
 
     static bool
     setpoint_callback(
-        const core::actuator_msgs::Setpoint_f32& msg,
-        void*                                    context
+        const MessageType& msg,
+        void*              context
     )
     {
-        Speed<_DATATYPE, _MESSAGETYPE>* _this = static_cast<Speed<_DATATYPE, _MESSAGETYPE>*>(context);
+        Speed<_DATATYPE, _MESSAGETYPE, _ENCODER_MESSAGETYPE>* _this = static_cast<Speed<_DATATYPE, _MESSAGETYPE, _ENCODER_MESSAGETYPE>*>(context);
+
         _this->_setpoint_timestamp = core::os::Time::now();
-        _this->_pid.set(msg.value);
+
+        DataType setpoint = Converter::_(msg);
+        _this->_pid.set(setpoint);
 
         return true;
     }
 
     static bool
     encoder_callback(
-        const core::sensor_msgs::Delta_f32& msg,
-        void*                               context
+        const EncoderMessageType& msg,
+        void*                     context
     )
     {
-        Speed<_DATATYPE, _MESSAGETYPE>* _this = static_cast<Speed<_DATATYPE, _MESSAGETYPE>*>(context);
-        _this->_actuator.set(_this->_pid.update(msg.value));
+        Speed<_DATATYPE, _MESSAGETYPE, _ENCODER_MESSAGETYPE>* _this = static_cast<Speed<_DATATYPE, _MESSAGETYPE, _ENCODER_MESSAGETYPE>*>(context);
+
+        DataType measurement = EncoderConverter::_(msg);
+
+        _this->_actuator.set(_this->_pid.update(measurement));
 
         return true;
     }
+};
+
+template <class _ACTUATOR, class _ENCODER>
+class Speed_:
+    public Speed<typename _ACTUATOR::Converter::TO, typename _ACTUATOR::Converter::FROM, typename _ENCODER::Converter::TO>
+{
+public:
+	Speed_(
+        const char*                                                    name,
+        core::utils::BasicActuator<typename _ACTUATOR::Converter::TO>& sensor,
+        core::os::Thread::Priority                                     priority = core::os::Thread::PriorityEnum::NORMAL
+    ) : Speed<typename _ACTUATOR::Converter::TO, typename _ACTUATOR::Converter::FROM, typename _ENCODER::Converter::TO>(name, sensor, priority) {}
 };
 }
 }
