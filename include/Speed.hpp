@@ -29,7 +29,8 @@ struct ValueOf {
         return from.value;
     }
 };
-template <typename _DATATYPE, class _MESSAGETYPE = _DATATYPE, class _ENCODER_MESSAGETYPE = _DATATYPE, class _CONVERTER = ValueOf<_DATATYPE, _MESSAGETYPE>, class _ENCODER_CONVERTER  = ValueOf<_DATATYPE, _ENCODER_MESSAGETYPE>>
+
+template <typename _DATATYPE, class _MESSAGETYPE = _DATATYPE, class _ENCODER_MESSAGETYPE = _DATATYPE, class _CONVERTER = ValueOf<_DATATYPE, _MESSAGETYPE>, class _ENCODER_CONVERTER = ValueOf<_DATATYPE, _ENCODER_MESSAGETYPE> >
 class Speed:
     public core::mw::CoreNode,
     public core::mw::CoreConfigurable<SpeedConfiguration>
@@ -62,17 +63,17 @@ public:
     }
 
 private:
-    core::mw::Subscriber<MessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _setpoint_subscriber;
+    core::mw::Subscriber<MessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH>        _setpoint_subscriber;
     core::mw::Subscriber<EncoderMessageType, ModuleConfiguration::SUBSCRIBER_QUEUE_LENGTH> _encoder_subscriber;
     core::utils::BasicActuator<DataType>& _actuator;
     core::pid_ie::PID_IE _pid;
-    core::os::Time _setpoint_timestamp;
+    core::os::Time       _setpoint_timestamp;
 
 private:
     bool
     onConfigure()
     {
-      _pid.config(configuration().kp, configuration().ti, configuration().td, configuration().ts, 100, configuration().min, configuration().max);
+        _pid.config(configuration().kp, configuration().ti, configuration().td, configuration().ts, 100, configuration().min, configuration().max);
 
         return true;
     }
@@ -105,8 +106,8 @@ private:
         }
 
         if (core::os::Time::now() > (this->_setpoint_timestamp + core::os::Time::ms(configuration().timeout))) {
-			_pid.reset();
-			_pid.set(configuration().idle);
+            _pid.reset();
+            _pid.set(configuration().idle);
         }
 
         return true;
@@ -149,7 +150,7 @@ class Speed_:
     public Speed<typename _ACTUATOR::Converter::TO, typename _ACTUATOR::Converter::FROM, typename _ENCODER::Converter::TO>
 {
 public:
-	Speed_(
+    Speed_(
         const char*                                                    name,
         core::utils::BasicActuator<typename _ACTUATOR::Converter::TO>& sensor,
         core::os::Thread::Priority                                     priority = core::os::Thread::PriorityEnum::NORMAL
